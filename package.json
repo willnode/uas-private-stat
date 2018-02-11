@@ -1,0 +1,11 @@
+{
+  "name": "uas-private-stat",
+  "version": "0.1",
+  "main": "main.js",
+  "author": "willnode",
+  "license": "MIT",
+  "private": false,
+  "devDependencies": {
+    "@types/chartjs": "^0.0.31"
+  }
+}
