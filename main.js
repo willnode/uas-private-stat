@@ -1,5 +1,5 @@
 var date = (new Date().getFullYear() - 2010) * 12 + new Date().getMonth();
-var canvas = document.getElementById('graph').getContext("2d");
+var canvas = document.getElementById('graph');
 var usdfilter = /\$ ([\d\.])$/;
 var data = {
 	start: monthSerial(date - 11),
@@ -17,12 +17,12 @@ var data = {
 	idx: 0,
 	theJS: '',
 	theData: localStorage['uas-priv-data'] || '',
-	// Generating the JS
+	// Generate the JS
 	goStep1: () => {
 		var range = new Array(data.endRaw() - data.startRaw() + 1).fill().map((_, i) => monthSerial(i + data.startRaw()));
 		data.theJS = makeTheJS(data.operation, data.pubId, data.range = range);
 	},
-	// Parsing the data
+	// Parse the data
 	goStep2: () => {
 		var sales = data.operation === 'sales';
 		localStorage['uas-priv-pubid'] = data.pubId;
@@ -41,7 +41,7 @@ var data = {
 					var net = sales ? parseFloat(aaData[i][5].match(usdfilter)[0]) : 0;
 					var short = result[i]['short_url'];
 					var obj = parsed.find((v, i, a) => v.short === short);
-					if (!obj) parsed.push(obj = { name: name, short: short, stat: new Array(data.raw.length), total: { qty: 0, gross: 0, net: 0 } });
+					if (!obj) parsed.push(obj = { name: name, short: short, stat: new Array(data.raw.length).fill(), total: { qty: 0, gross: 0, net: 0 } });
 					obj.stat[iter] = {
 						qty: qty,
 						gross: gross,
@@ -59,13 +59,23 @@ var data = {
 	},
 	// Graph the whole thing
 	goStep3: () => {
-		var parsed = data.parsed[data.idx];
-		new Chart(canvas, {
-			type: 'line', data: {
-				label: '#',
-				data: parsed.stat.map((v, i, a) => v.qty),
-				borderWidth: 1
-			}
+		var buffer = [];
+
+		data.parsed.forEach(el => {
+			buffer.push({
+				label: el.name,
+				backgroundColor: 'transparent',
+				borderColor: serialColor(el.short),
+				data: el.stat.map((v, i) => (v && v.qty) || 0),
+			})
+		})
+		console.log(buffer.length);
+		window.chart = new Chart(canvas.getContext("2d"), {
+			type: 'line',
+			data: {
+				labels: data.range,
+				datasets: buffer
+			},
 		})
 
 	}
@@ -82,8 +92,10 @@ new Vue({
 			data.end = dates.end;
 			if (data.pubId > 0) {
 				data.goStep1();
-				if (data.theData)
+				if (data.theData) {
 					data.goStep2();
+					data.goStep3();
+				}
 			}
 		}
 	}
@@ -133,4 +145,18 @@ function monthSerial(number) {
 function unmonthSerial(str) {
 	str = str || "201701";
 	return (parseInt(str.substring(0, 4)) - 2010) * 12 + parseInt(str.substring(4, 6)) - 1;
+}
+
+function serialColor(str) {
+	// https://stackoverflow.com/a/16348977/3908409
+	var hash = 0;
+	for (var i = 0; i < str.length; i++) {
+		hash = str.charCodeAt(i) + ((hash << 5) - hash);
+	}
+	var colour = '#';
+	for (var i = 0; i < 3; i++) {
+		var value = (hash >> (i * 8)) & 0xFF;
+		colour += ('00' + value.toString(16)).substr(-2);
+	}
+	return colour;
 }
