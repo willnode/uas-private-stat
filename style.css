@@ -1,10 +1,79 @@
 body {
-    font-family: 'Segoe UI', Roboto, 'Open Sans', 'Helvetica Neue', sans-serif
+	font-family: 'Segoe UI', Roboto, 'Open Sans', 'Helvetica Neue', sans-serif
+}
+
+#head {
+	display: flex;
+	align-items: center;
+}
+
+a {
+	text-decoration: none;
+}
+
+button {
+	background-color: whitesmoke;
+	border-radius: 3px;
+	padding: 3px 5px;
+	border: 1px solid grey;
+	font-size: 15px;
+	cursor: pointer;
+	transition: all 0.2s linear;
+}
+
+button:hover {
+	border-color: #07c;
+}
+
+button:active, button.on {
+	background-color: #07c;
+	color: white;
+}
+
+span {
+	margin: 0px 5px;
+}
+
+.space {
+	flex-grow: 1;
 }
 
 textarea {
-    width:100%;
-    resize: none;
-    height:400px;
+	width:100%;
+	resize: none;
+	height:400px;
 }
 
+#mid {
+	display: flex;
+	padding: 5px;
+	margin: 5px 0px;
+	border: 1px solid grey;
+	max-height: 1000px;
+	transition: all 0.2s ease-out;
+	border-radius: 5px;
+}
+
+#mid > div {
+	flex-grow: 1;
+	flex-basis: 0;
+	margin: 5px;
+}
+
+.top {
+	min-height: 30px;
+	padding: 3px 0px;
+}
+
+.hide {
+	max-height: 0px !important;
+	overflow: hidden;
+	padding: 0px !important;
+	border: solid 1px transparent !important;
+}
+
+footer, footer a {
+	margin-top: 40px;
+	font-size: 12px;
+	color: black;
+}

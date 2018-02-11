@@ -4,7 +4,7 @@
 <head>
 	<meta charset="utf-8" />
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>Unity Asset Store - Publisher Package List</title>
+	<title>Unity Asset Store - Publisher Download or Sales Graph</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" type="text/css" media="screen" href="style.css" />
 </head>
@@ -12,30 +12,52 @@
 <body>
 	<div id="app">
 		<div id="head">
-			<input id="pubId" v-model="pubId" placeholder="Input publisher number ID (xxxxx) here.">
-			<select id="start-m" :value="start">
-				<option v-for="c in dateRange">{{c}}</option>
+			<span>
+				<a :href="pubIdHint" target="_blank" rel="noreferrer">Publisher ID</a>
+			</span>
+			<input id="pubId" v-model="pubId" placeholder="Input publisher number ID (xxxxx) here." @change="goStep1()">
+			<span>Start</span>
+			<select id="start" v-model="start" @change="goStep1();goStep3();">
+				<option v-for="c in dateRange" v-once>{{c}}</option>
 			</select>
-			<select id="start-y" v-model="end">
-				<option v-for="c in dateRange">{{c}}</option>
+			<span>End</span>
+			<select id="end" v-model="end" @change="goStep1();goStep3();">
+				<option v-for="c in dateRange" v-once>{{c}}</option>
 			</select>
-			<button @click="goStep1()">
-				Generate
+			<span>Data Category</span>
+			<span class="toggles">
+				<button v-for="c in operationChoices" :class="{ on: operation===c }" @click="operation=c;loadTheDataFromDisk();goStep1()">{{c}}</button>
+			</span>
+			<span>Data Property</span>
+			<span class="toggles">
+				<button v-for="c in propertyChoices" :class="{ on: property===c }" @click="property=c;goStep3()">{{c}}</button>
+			</span>
+			<span class="space"></span>
+			<button :class="{ 'on': showCodePanel }" @click="showCodePanel = !showCodePanel">
+				Show Script Dialog
 			</button>
 		</div>
-		<div id="mid">
-			<span>
-				<textarea v-model="theJS"></textarea>
-			</span>
-			<span>
-				<textarea v-model="theData"></textarea>
-			</span>
-			<button @click="goStep2();goStep3()">
-				Parse and Show
-			</button>
+		<div id="mid" :class="{ hide: !showCodePanel }">
+			<div class="left">
+				<div class="top">
+					<span>Copy and execute the script.</span>
+					<button id="copyTheJS-btn" @click="copyTheJS()">Copy</button>
+				</div>
+				<textarea id="theJS" :value="theJS" readonly></textarea>
+			</div>
+			<div class="right">
+				<div class="top">
+					<span>Paste the result here.</span>
+					<span v-if="theDataError" class="error">⛔ {{theDataError}}</span>
+				</div>
+				<textarea id="theData" v-model="theData" @input="goStep2()"></textarea>
+			</div>
 		</div>
 	</div>
-	<canvas id="graph" width="400" height="200"></canvas>
+	<canvas id="graph" width="400" height="180"></canvas>
+	<footer>
+		<a href="https://github.com/willnode/uas-private-stat" target="_blank" rel="nofollow noopener">✨ Github Source</a>
+	</footer>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.1/Chart.bundle.min.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.5.13/vue.js"></script>
 	<script src="main.js"></script>
