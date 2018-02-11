@@ -2,20 +2,43 @@
 <html>
 
 <head>
-  <meta charset="utf-8" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>Unity Asset Store - Publisher Package List</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" type="text/css" media="screen" href="style.css" />
+	<meta charset="utf-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>Unity Asset Store - Publisher Package List</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" type="text/css" media="screen" href="style.css" />
 </head>
 
 <body>
-  <div id="app">
-
-  </div>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.1/Chart.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.5.13/vue.js"></script>
-  <script src="main.js"></script>
+	<div id="app">
+		<div id="head">
+			<input id="pubId" v-model="pubId" placeholder="Input publisher number ID (xxxxx) here.">
+			<select id="start-m" :value="start">
+				<option v-for="c in dateRange">{{c}}</option>
+			</select>
+			<select id="start-y" v-model="end">
+				<option v-for="c in dateRange">{{c}}</option>
+			</select>
+			<button @click="goStep1()">
+				Generate
+			</button>
+		</div>
+		<div id="mid">
+			<span>
+				<textarea v-model="theJS"></textarea>
+			</span>
+			<span>
+				<textarea v-model="theData"></textarea>
+			</span>
+			<button @click="goStep2();goStep3()">
+				Parse and Show
+			</button>
+		</div>
+		<canvas id="graph"></canvas>
+	</div>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.1/Chart.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.5.13/vue.js"></script>
+	<script src="main.js"></script>
 </body>
 
 </html>

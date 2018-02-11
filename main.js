@@ -1,17 +1,12 @@
-var date = new Date();
+var date = (new Date().getFullYear() - 2010) * 12 + new Date().getMonth();
 var canvas = document.getElementById('graph').getContext("2d");
 var usdfilter = /\$ ([\d\.])$/;
 var data = {
-	start: {
-		y: date.getFullYear() - 1,
-		m: date.getMonth()
-	},
-	end: {
-		y: date.getFullYear(),
-		m: date.getMonth()
-	},
-	yRange: Array(date.getFullYear() - 2010).fill().map((_, i) => i + 2010),
-	mRange: Array(12).fill().map((_, i) => i + 1),
+	start: monthSerial(date - 11),
+	end: monthSerial(date),
+	startRaw: () => unmonthSerial(data.start),
+	endRaw: () => unmonthSerial(data.end),
+	dateRange: Array(date + 1).fill().map((_, i) => monthSerial(i)).reverse(),
 	pubId: localStorage['uas-priv-pubid'] || 0,
 	pubIdHint: 'https://i.imgur.com/uBFYQMA.png',
 	operation: 'downloads',
@@ -24,22 +19,15 @@ var data = {
 	theData: localStorage['uas-priv-data'] || '',
 	// Generating the JS
 	goStep1: () => {
-		var range = []
-		for (let y = data.start.y; y <= data.end.y; y++) {
-			var ms = data.start.y === y ? data.start.m : 1;
-			var me = data.end.y === y ? data.end.m : 12;
-			for (let m = ms; y <= me; y++) {
-				range.push(y + (m + "").padStart(2, "0"));
-			}
-		}
+		var range = new Array(data.endRaw() - data.startRaw() + 1).fill().map((_, i) => monthSerial(i + data.startRaw()));
 		data.theJS = makeTheJS(data.operation, data.pubId, data.range = range);
 	},
 	// Parsing the data
 	goStep2: () => {
 		var sales = data.operation === 'sales';
 		localStorage['uas-priv-pubid'] = data.pubId;
-		localStorage['uas-priv-dates'] = { start: data.start, end: data.end };
-		data.raw = localStorage['uas-priv-data'] = JSON.parse(theData);
+		localStorage['uas-priv-dates'] = JSON.stringify({ start: data.start, end: data.end });
+		data.raw = JSON.parse(localStorage['uas-priv-data'] = data.theData);
 		var parsed = [];
 		var iter = 0;
 		data.raw.forEach(el => {
@@ -48,7 +36,7 @@ var data = {
 				var result = el.result;
 				for (let i = 0; i < aaData.length; i++) {
 					var name = aaData[i][0];
-					var qty = sales ? aaData[i][2] : aaData[i][1];
+					var qty = parseFloat(sales ? aaData[i][2] : aaData[i][1]);
 					var gross = sales ? parseFloat(aaData[i][1].match(usdfilter)[0]) : 0;
 					var net = sales ? parseFloat(aaData[i][5].match(usdfilter)[0]) : 0;
 					var short = result[i]['short_url'];
@@ -89,6 +77,7 @@ new Vue({
 	mounted: () => {
 		var dates = localStorage['uas-priv-dates'];
 		if (dates) {
+			dates = JSON.parse(dates);
 			data.start = dates.start;
 			data.end = dates.end;
 			if (data.pubId > 0) {
@@ -103,7 +92,7 @@ new Vue({
 function makeTheJS(operation, pubid, requests) {
 	return `
 (function () {
-	var url = '/api/publisher-info/${operation}/${pubid}/';
+	var uri = '/api/publisher-info/${operation}/${pubid}/';
 	var data = [];
 	var requests = ${JSON.stringify(requests)};
 	var finalmsg = "Requests done. Please copy this data and proceed to next step.";
@@ -111,7 +100,7 @@ function makeTheJS(operation, pubid, requests) {
 	function DoRequest(i) {
 		console.log("Requesting data at " + requests[i]);
 		var xhr = new XMLHttpRequest();
-		var url = url + requests[i] + ".json";
+		var url = uri + requests[i] + ".json";
 		xhr.onreadystatechange = function () {
 			if (this.readyState == 4) {
 				if (this.status == 200)
@@ -133,5 +122,15 @@ function makeTheJS(operation, pubid, requests) {
 	setTimeout(() => DoRequest(0), 0);
 	return "Wait a minute while we doing " + requests.length + " requests";
 })();
-`
+`.replace(/\t/g, " ");
+}
+
+function monthSerial(number) {
+	// number is month counting from from Jan 2010 (zero)
+	return (2010 + Math.trunc(number / 12)) + (number % 12 + 1).toString().padStart(2, "0");
+}
+
+function unmonthSerial(str) {
+	str = str || "201701";
+	return (parseInt(str.substring(0, 4)) - 2010) * 12 + parseInt(str.substring(4, 6)) - 1;
 }

@@ -1,3 +1,10 @@
 body {
     font-family: 'Segoe UI', Roboto, 'Open Sans', 'Helvetica Neue', sans-serif
 }
+
+textarea {
+    width:100%;
+    resize: none;
+    height:400px;
+}
+
