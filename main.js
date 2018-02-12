@@ -16,6 +16,7 @@ var data = {
 	range: [],
 	raw: [],
 	parsed: [],
+	parsedCumulative: {},
 	idx: 0,
 	showCodePanel: false,
 	theJS: '',
@@ -64,6 +65,22 @@ var data = {
 			});
 			data.theDataError = '';
 			data.parsed = parsed;
+			{
+				var cum = data.parsedCumulative = {
+					name: "Total",
+					short: {},
+					stat: new Array(data.raw.length).fill(),
+					total: { qty: 0, gross: 0 }
+				};
+				var stat = cum.stat;
+				parsed.forEach(el => {
+					for (let i = 0; i < el.stat.length; i++) {
+						stat[i] = combineStat(stat[i], el.stat[i]);
+						stat[i].snapshot = stat[i].snapshot || (el.stat[i] && el.stat[i].snapshot);
+					}
+				})
+				stat.forEach(el => cum.total = combineStat(cum.total, el));
+			}
 			data.goStep3();
 		} catch (e) {
 			console.log(e);
@@ -85,6 +102,19 @@ var data = {
 				data: stat2.map(v => (v && v[data.property]) || 0),
 			})
 		})
+		if (data.parsed.length > 1) {
+			var stat2 = [];
+			data.range.forEach(r => stat2.push(data.parsedCumulative.stat.find(v => v && v.snapshot === r) || null));
+
+			buffer.push({
+				label: "Total",
+				backgroundColor: 'transparent',
+				borderColor: 'rgba(0, 0, 0, 0.3)',
+				borderWidth: 2,
+				data: stat2.map(v => (v && v[data.property]) || 0),
+			});
+		}
+
 		if (window.chart) window.chart.destroy();
 		window.chart = new Chart(canvas.getContext("2d"), {
 			type: 'line',
@@ -92,6 +122,13 @@ var data = {
 				labels: data.range,
 				datasets: buffer
 			},
+			options: {
+				tooltips: {
+					mode: 'index',
+					axis: 'xy',
+					intersect: false
+				}
+			}
 		})
 	},
 	copyTheJS: function () {
