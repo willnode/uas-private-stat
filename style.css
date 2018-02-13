@@ -44,6 +44,10 @@ textarea {
 	height:400px;
 }
 
+#pubId {
+	flex-grow: 2;
+}
+
 #mid {
 	display: flex;
 	padding: 5px;

@@ -75,8 +75,8 @@ var data = {
 				var stat = cum.stat;
 				parsed.forEach(el => {
 					for (let i = 0; i < el.stat.length; i++) {
-						stat[i] = combineStat(stat[i], el.stat[i]);
-						stat[i].snapshot = stat[i].snapshot || (el.stat[i] && el.stat[i].snapshot);
+						if (stat[i] = combineStat(stat[i], el.stat[i]))
+							stat[i].snapshot = stat[i].snapshot || (el.stat[i] && el.stat[i].snapshot);
 					}
 				})
 				stat.forEach(el => cum.total = combineStat(cum.total, el));
@@ -125,8 +125,7 @@ var data = {
 			options: {
 				tooltips: {
 					mode: 'index',
-					axis: 'xy',
-					intersect: false
+					axis: 'xy'
 				}
 			}
 		})

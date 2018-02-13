@@ -15,7 +15,7 @@
 			<span>
 				<a :href="pubIdHint" target="_blank" rel="noreferrer">Publisher ID</a>
 			</span>
-			<input id="pubId" v-model="pubId" placeholder="Input publisher number ID (xxxxx) here." @change="goStep1()">
+			<input id="pubId" v-model="pubId" placeholder="Required. Input publisher number ID (xxxxx) here" @change="goStep1()">
 			<span>Start</span>
 			<select id="start" v-model="start" @change="goStep1();goStep3();">
 				<option v-for="c in dateRange" v-once>{{c}}</option>
