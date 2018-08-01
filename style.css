@@ -81,3 +81,16 @@ footer, footer a {
 	font-size: 12px;
 	color: black;
 }
+
+.graphs>* {
+	display: inline-block;
+	height: 400px;
+}
+
+.graph {
+	width: calc(100% - 300px);
+}
+
+.cumulative {
+	width: 295px;
+}

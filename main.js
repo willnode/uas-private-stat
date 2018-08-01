@@ -1,5 +1,4 @@
 var date = (new Date().getFullYear() - 2010) * 12 + new Date().getMonth();
-var canvas = document.getElementById('graph');
 var usdfilter = /\$ ([\d\.-]+)/;
 var data = {
 	start: monthSerial(date - 12),
@@ -23,7 +22,7 @@ var data = {
 	theData: '',
 	theDataError: '',
 	loadTheDataFromDisk: function () {
-		data.theData = localStorage['uas-priv-data-' + data.operation];
+		data.theData = localStorage['uas-priv-data-' + data.operation] || '[]';
 		setTimeout(() => data.goStep2(), 0);
 	},
 	// Generate the JS
@@ -36,7 +35,10 @@ var data = {
 		try {
 			var sales = data.operation === 'sales';
 			localStorage['uas-priv-pubid'] = data.pubId;
-			localStorage['uas-priv-dates'] = JSON.stringify({ start: data.start, end: data.end });
+			localStorage['uas-priv-dates'] = JSON.stringify({
+				start: data.start,
+				end: data.end
+			});
 			data.raw = JSON.parse(localStorage['uas-priv-data-' + data.operation] = data.theData);
 			var parsed = [];
 			var iter = 0;
@@ -51,7 +53,15 @@ var data = {
 						var gross = sales ? parseFloat(aaData[i][5].match(usdfilter)[1]) : 0;
 						var short = result[i]['short_url'];
 						var obj = parsed.find((v, i, a) => v.short === short);
-						if (!obj) parsed.push(obj = { name: name, short: short, stat: new Array(data.raw.length).fill(), total: { qty: 0, gross: 0 } });
+						if (!obj) parsed.push(obj = {
+							name: name,
+							short: short,
+							stat: new Array(data.raw.length).fill(),
+							total: {
+								qty: 0,
+								gross: 0
+							}
+						});
 						var st = {
 							qty: qty,
 							gross: gross,
@@ -64,13 +74,15 @@ var data = {
 				iter++;
 			});
 			data.theDataError = '';
-			data.parsed = parsed;
-			{
+			data.parsed = parsed; {
 				var cum = data.parsedCumulative = {
 					name: "Total",
 					short: {},
 					stat: new Array(data.raw.length).fill(),
-					total: { qty: 0, gross: 0 }
+					total: {
+						qty: 0,
+						gross: 0
+					}
 				};
 				var stat = cum.stat;
 				parsed.forEach(el => {
@@ -89,6 +101,7 @@ var data = {
 	},
 	// Graph the whole thing
 	goStep3: () => {
+
 		var buffer = [];
 
 		data.parsed.forEach(el => {
@@ -115,8 +128,10 @@ var data = {
 			});
 		}
 
-		if (window.chart) window.chart.destroy();
-		window.chart = new Chart(canvas.getContext("2d"), {
+		if (window.graphCanvas) window.graphCanvas.destroy();
+		if (window.cumulativeCanvas) window.cumulativeCanvas.destroy();
+
+		window.graphCanvas = new Chart(graph.getContext("2d"), {
 			type: 'line',
 			data: {
 				labels: data.range,
@@ -126,9 +141,41 @@ var data = {
 				tooltips: {
 					mode: 'index',
 					axis: 'xy'
+				},
+				maintainAspectRatio: false
+			}
+		})
+
+		var dataSets = data.parsed.map((x) => data.range.map(y => {
+			var w = x.stat.find(z => z && z.snapshot == y);
+			return w ? w[data.property] : 0;
+		}).reduce((a, b) => a + b, 0));
+
+		var sumOfAll = dataSets.reduce((a, b) => a + b, 0);
+
+		// entirely different graph
+		window.cumulativeCanvas = new Chart(cumulative.getContext("2d"), {
+			type: 'pie',
+			data: {
+				labels: data.parsed.map((x) => x.name),
+				datasets: [{
+					backgroundColor: data.parsed.map((x) => serialColor(x.name)),
+					data: dataSets,
+				}]
+			},
+			options: {
+				tooltips: {
+					callbacks: {
+						// Include a dollar sign in the ticks
+						label: function (value, data) {
+							var i = value.index;
+							return `${data.labels[i]} : ${dataSets[i]} of ${sumOfAll} (${(dataSets[i]/sumOfAll*100).toFixed(1)}%)`;
+						}
+					}
 				}
 			}
 		})
+
 	},
 	copyTheJS: function () {
 		var area = document.getElementById('theJS');
@@ -159,6 +206,8 @@ new Vue({
 })
 
 function makeTheJS(operation, pubid, requests) {
+	if (pubid==0) return `please set Publisher ID first`;
+
 	return `
 (function () {
 	var uri = '/api/publisher-info/${operation}/${pubid}/';
